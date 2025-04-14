@@ -1,0 +1,16 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+  <h1>Список пісень</h1>
+  <ul>
+    {% for song in songs %}
+      <li>
+        <a href="{% url 'song_detail' song_id=song.id %}">
+          {{ song.title }} - {{ song.artist }}
+        </a>
+      </li>
+    {% empty %}
+      <li>Пісень не знайдено.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

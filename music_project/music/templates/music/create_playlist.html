@@ -1,0 +1,11 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+  <h1>Створення плейлиста</h1>
+  <form method="post">
+    {% csrf_token %}
+    <label for="name">Назва плейлиста:</label>
+    <input type="text" name="name" id="name">
+    <button type="submit">Створити</button>
+  </form>
+{% endblock %}

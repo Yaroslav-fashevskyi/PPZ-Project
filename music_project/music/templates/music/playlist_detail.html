@@ -1,0 +1,26 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+  <h1>Плейлист: {{ playlist.name }}</h1>
+  
+  <h2>Пісні у плейлисті:</h2>
+  <ul>
+    {% for song in songs_in_playlist %}
+      <li>{{ song.title }} - {{ song.artist }}</li>
+    {% empty %}
+      <li>Пісень немає.</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Додати пісню до плейлиста:</h2>
+  <ul>
+    {% for song in all_songs %}
+      <li>
+        {{ song.title }} - {{ song.artist }}
+        <a href="{% url 'add_song_to_playlist' playlist_id=playlist.id song_id=song.id %}">[Додати]</a>
+      </li>
+    {% endfor %}
+  </ul>
+  
+  <a href="{% url 'user_playlists' %}">Назад до моїх плейлистів</a>
+{% endblock %}

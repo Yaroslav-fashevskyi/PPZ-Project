@@ -1,0 +1,10 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+  <h1>{{ song.title }}</h1>
+  <p><strong>Виконавець:</strong> {{ song.artist }}</p>
+  <p><strong>Жанр:</strong> {{ song.genre }}</p>
+  <p><strong>Стиль:</strong> {{ song.style }}</p>
+  <p><strong>Опис:</strong> {{ song.description }}</p>
+  <a href="{% url 'song_list' %}">Назад до списку пісень</a>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+  <h1>Підтвердження видалення</h1>
+  <p>Ви впевнені, що хочете видалити плейлист "{{ playlist.name }}"?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Так, видалити</button>
+    <a href="{% url 'user_playlists' %}">Ні, скасувати</a>
+  </form>
+{% endblock %}

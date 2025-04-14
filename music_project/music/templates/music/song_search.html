@@ -1,0 +1,20 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+  <h1>Пошук пісень</h1>
+  <form method="get" action="{% url 'song_search' %}">
+    <input type="text" name="genre" placeholder="Введіть жанр..." value="{{ query }}">
+    <button type="submit">Пошук</button>
+  </form>
+  <ul>
+    {% for song in songs %}
+      <li>
+        <a href="{% url 'song_detail' song_id=song.id %}">
+          {{ song.title }} - {{ song.artist }}
+        </a>
+      </li>
+    {% empty %}
+      <li>Пісень не знайдено.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

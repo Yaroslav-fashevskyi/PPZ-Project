@@ -1,0 +1,15 @@
+{% extends 'music/base.html' %}
+
+{% block content %}
+  <h1>Мої плейлисти</h1>
+  <ul>
+    {% for playlist in playlists %}
+      <li>
+        <a href="{% url 'playlist_detail' playlist_id=playlist.id %}">{{ playlist.name }}</a>
+        <a href="{% url 'delete_playlist' playlist_id=playlist.id %}">[Видалити]</a>
+      </li>
+    {% empty %}
+      <li>Немає плейлистів. <a href="{% url 'create_playlist' %}">Створити плейлист</a></li>
+    {% endfor %}
+  </ul>
+{% endblock %}

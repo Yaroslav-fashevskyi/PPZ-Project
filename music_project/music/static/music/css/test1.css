@@ -1,0 +1,158 @@
+/* test1.css — насичені кольори без градієнтів */
+
+/* Загальний фон сторінки */
+body {
+  background: #121212;        /* дуже темний графіт */
+  color: #e0e0e0;             /* світло‑сірий текст */
+  min-height: 100vh;
+  margin: 0;
+  font-family: sans-serif;
+}
+
+/* Навбар */
+nav.navbar {
+  background-color: #1db954;  /* яскравий зелений */
+}
+nav .navbar-brand, nav .nav-link {
+  color: #ffffff !important;
+}
+nav .nav-link:hover {
+  color: #121212 !important;
+  background-color: #ffffff33;
+  border-radius: 4px;
+}
+
+/* Таблиця треків */
+.spotify-table {
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+.spotify-table thead th {
+  background-color: #282828;  /* темно‑сірий заголовок */
+  color: #ffffff;
+  padding: 12px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+.spotify-table tbody tr:nth-child(odd) {
+  background-color: #1e1e1e;  /* темніший рядок */
+}
+.spotify-table tbody tr:nth-child(even) {
+  background-color: #2b2b2b;  /* трохи світліший */
+}
+.spotify-table tbody tr:hover {
+  background-color: #1db954;  /* зелений hover */
+  color: #121212;
+}
+.spotify-table td {
+  vertical-align: middle;
+  padding: 10px 12px;
+}
+
+/* Номер треку та іконка */
+.track-number {
+  color: #b3b3b3;
+}
+.play-icon {
+  color: #1db954;
+}
+
+/* Кнопка Play/Pause */
+.play-btn {
+  background-color: #1db954;
+  border: 1px solid #1db954;
+  color: #121212;
+}
+.play-btn:hover {
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+/* Посилання в таблиці */
+a.link-light {
+  color: #e0e0e0 !important;
+  text-decoration: none;
+}
+a.link-light:hover {
+  color: #1db954 !important;
+  text-decoration: underline;
+}
+
+
+/* ———————————————————————————————————————————— */
+/* 1) Виділення колонки з плеєром */
+.spotify-table tbody tr td:last-child {
+  background-color: #2a2a2a;        /* темно‑сірий фон для аудіо‑колонки */
+  padding: 12px;                    /* трохи додаткового простору */
+  border-left: 4px solid #ff5722;   /* яскраво‑помаранчевий акцент зліва */
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* 2) Інший колір для шапки (header/nav) */
+nav.navbar {
+  background-color: #333333 !important;  /* темніший фон для меню */
+  border-bottom: 4px solid #ff5722;       /* помаранчевий акцент по низу */
+}
+
+
+/* ——————— Mini Player ——————— */
+#mini-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #121212;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  box-shadow: 0 -3px 6px rgba(0,0,0,0.7);
+  z-index: 1000;
+}
+
+#mini-player .mp-btn {
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 1.5rem;
+  margin-right: 16px;
+  cursor: pointer;
+}
+
+#mini-player .mp-btn:hover {
+  color: #1db954;
+}
+
+#mp-track-info {
+  flex: 1;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#mp-seek {
+  width: 200px;
+  margin-left: 16px;
+}
+
+/* Щоб контент не ховався за плеєром */
+body {
+  padding-bottom: 60px; /* приблизно висота плеєра */
+}
+
+
+/* Підсвічування активного рядка */
+.spotify-table tbody tr.active {
+  background-color: #1db954 !important;
+  color: #121212;
+}
+.spotify-table tbody tr.active .play-icon,
+.spotify-table tbody tr.active .row-play-btn i {
+  color: #121212;
+}
+
+/* Завжди показуємо іконку паузи в активному рядку */
+.spotify-table tbody tr.active .play-icon {
+  display: inline-block !important;
+}

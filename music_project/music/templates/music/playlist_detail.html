@@ -1,10 +1,17 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Плейлист — {{ playlist.name }}</title>
+
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Ваш кастомний CSS з test1.css -->
+  <link href="{% static 'music/css/test1.css' %}" rel="stylesheet">
 </head>
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
@@ -17,7 +24,12 @@
   <div class="card mb-4 shadow">
     <div class="card-body">
       <h2 class="card-title">{{ playlist.name }}</h2>
-      <p class="card-text"><small class="text-muted">Власник: {{ playlist.owner.username }} | Створено: {{ playlist.created_at }}</small></p>
+      <p class="card-text">
+        <small class="text-muted">
+          Власник: {{ playlist.owner.username }} |
+          Створено: {{ playlist.created_at }}
+        </small>
+      </p>
     </div>
   </div>
 
@@ -46,7 +58,8 @@
         {% for s in songs %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             {{ s.title }} — {{ s.artist }}
-            <a href="{% url 'playlist_add_song' pl_id=playlist.id song_id=s.id %}" class="btn btn-sm btn-primary">Додати</a>
+            <a href="{% url 'playlist_add_song' pl_id=playlist.id song_id=s.id %}"
+               class="btn btn-sm btn-primary">Додати</a>
           </li>
         {% endfor %}
       </ul>
@@ -54,6 +67,78 @@
   </div>
 </div>
 
+<!-- ===== Mini Player ===== -->
+<div id="mini-player">
+  <button id="mp-prev" class="mp-btn"><i class="bi bi-skip-start-fill"></i></button>
+  <button id="mp-play" class="mp-btn"><i class="bi bi-play-fill"></i></button>
+  <button id="mp-next" class="mp-btn"><i class="bi bi-skip-end-fill"></i></button>
+
+  <div id="mp-track-info">Немає треків</div>
+  <input type="range" id="mp-seek" value="0" min="0" max="100">
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Збираємо треки з плейлиста
+  const mpList = [
+    {% for s in playlist.songs.all %}
+      { url: "{{ s.audio_file.url }}", title: "{{ s.title }} — {{ s.artist }}" }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  let mpIndex = 0;
+  const audio   = new Audio(mpList[0]?.url);
+  const btnPlay = document.getElementById('mp-play');
+  const btnPrev = document.getElementById('mp-prev');
+  const btnNext = document.getElementById('mp-next');
+  const info    = document.getElementById('mp-track-info');
+  const seek    = document.getElementById('mp-seek');
+
+  function loadTrack(i) {
+    audio.src = mpList[i].url;
+    info.textContent = mpList[i].title;
+    audio.load();
+  }
+
+  function playPause() {
+    if (audio.paused) {
+      audio.play();
+      btnPlay.firstElementChild.className = 'bi bi-pause-fill';
+    } else {
+      audio.pause();
+      btnPlay.firstElementChild.className = 'bi bi-play-fill';
+    }
+  }
+
+  btnPlay.addEventListener('click', playPause);
+  btnPrev.addEventListener('click', () => {
+    mpIndex = mpIndex > 0 ? mpIndex - 1 : mpList.length - 1;
+    loadTrack(mpIndex);
+    audio.play();
+    btnPlay.firstElementChild.className = 'bi bi-pause-fill';
+  });
+  btnNext.addEventListener('click', () => {
+    mpIndex = mpIndex < mpList.length - 1 ? mpIndex + 1 : 0;
+    loadTrack(mpIndex);
+    audio.play();
+    btnPlay.firstElementChild.className = 'bi bi-pause-fill';
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    if (!isNaN(audio.duration)) {
+      seek.value = (audio.currentTime / audio.duration) * 100;
+    }
+  });
+  seek.addEventListener('input', () => {
+    if (!isNaN(audio.duration)) {
+      audio.currentTime = (seek.value / 100) * audio.duration;
+    }
+  });
+  audio.addEventListener('ended', () => btnNext.click());
+
+  // Завантажуємо перший трек
+  if (mpList.length) loadTrack(0);
+</script>
+
 </body>
 </html>

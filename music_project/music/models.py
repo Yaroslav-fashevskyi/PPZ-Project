@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
 
 class Song(models.Model):
     title       = models.CharField(max_length=200)
@@ -9,6 +8,7 @@ class Song(models.Model):
     style       = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
     audio_file  = models.FileField(upload_to='songs/', blank=True)
+    cover_image = models.ImageField(upload_to='covers/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} — {self.artist}"

@@ -1,59 +1,337 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Список пісень — Music Platform</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Music Platform — Адаптивний Spotify‑style</title>
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+  <style>
+    body {
+      background: #121212; color: #fff;
+      padding-bottom: 120px; font-family: 'Segoe UI', sans-serif;
+    }
+    a { text-decoration: none; }
+
+    /* Navbar */
+    .navbar {
+      background: #181818;
+    }
+    .navbar-brand {
+      font-weight: bold; color: #1db954 !important;
+    }
+    .navbar-nav .nav-link {
+      color: #b3b3b3; margin-left: 1rem;
+    }
+    .navbar-nav .nav-link:hover { color: #fff; }
+    .search-bar {
+      flex: 0 1 400px; margin-left: 4rem;
+    }
+    .search-bar .form-control {
+      background: #282828; border: none; color: #fff;
+    }
+    .search-bar .form-control::placeholder { color: #777; }
+    .search-bar .btn {
+      background: #1db954; border: none;
+    }
+    .search-bar .btn:hover { background: #1ed760; }
+
+    /* Tracks list */
+    .tracks-list {
+      max-width: 900px;
+      margin: 2rem auto 0;
+    }
+    .track {
+      display: grid;
+      grid-template-columns: 60px 1fr 100px 60px;
+      align-items: center;
+      gap: 1rem;
+      padding: .75rem 1rem;
+      margin: .5rem 0;
+      border-radius: 6px;
+      transition: background .2s;
+    }
+    .track:hover { background: #282828; cursor: pointer; }
+    .track.active {
+      background: #1db954;
+      box-shadow: inset 0 0 10px #1ed760;
+    }
+    .track-art {
+      width: 60px; height: 60px; overflow: hidden;
+      border-radius: 4px; background: #333;
+    }
+    .track-art img {
+      width:100%; height:100%; object-fit:cover;
+      transition: transform .2s;
+    }
+    .track.active .track-art img { transform: scale(1.1); }
+    .track-info .track-name { font-weight:500; }
+    .track-info .track-artist { color:#b3b3b3; }
+    .track-duration { text-align:right; color:#b3b3b3; }
+    .track-action .play-btn {
+      background:none; border:none; color:#b3b3b3; font-size:1.2rem;
+    }
+    .track-action .play-btn:hover { color:#fff; }
+    .track-action .play-btn.active {
+      color:#121212; background:#fff; border-radius:50%;
+    }
+
+    /* Mini‑player */
+    #mini-player {
+      position:fixed; bottom:0; left:0; right:0;
+      background:#181818; display:flex; align-items:center;
+      padding:10px 20px; box-shadow:0 -3px 6px rgba(0,0,0,.8);
+      z-index:1000;
+    }
+    #mini-player .mp-art {
+      width:50px; height:50px; border-radius:4px;
+      overflow:hidden; background:#333; margin-right:1rem;
+    }
+    #mini-player .mp-art img {
+      width:100%; height:100%; object-fit:cover;
+    }
+    #mini-player .mp-info {
+      flex:1; overflow:hidden;
+    }
+    #mini-player .mp-title {
+      font-weight:500; white-space:nowrap;
+      overflow:hidden; text-overflow:ellipsis;
+    }
+    #mini-player .mp-artist { color:#b3b3b3; font-size:.85rem; }
+    #mini-player .mp-controls {
+      display:flex; align-items:center; margin-right:1rem;
+    }
+    #mini-player .mp-btn {
+      background:none; border:none; color:#b3b3b3;
+      font-size:1.3rem; margin:0 .5rem; cursor:pointer;
+    }
+    #mini-player .mp-btn:hover { color:#fff; }
+    #mp-seek { flex:2; margin:0 1rem; }
+    #mp-time {
+      min-width:80px; text-align:center;
+      color:#b3b3b3; font-size:.8rem;
+    }
+    #mp-volume { width:100px; margin-left:1rem; }
+
+    /* —— Responsive —— */
+    @media (max-width: 992px) {
+      .search-bar { margin-left: 2rem; }
+      .track { grid-template-columns: 50px 1fr 50px; }
+      .track-duration { display: none; }
+      .tracks-list { margin: 1.5rem auto 0; }
+    }
+    @media (max-width: 768px) {
+      .search-bar { flex: 1 1 auto; margin: 0 1rem; }
+      .tracks-list { margin: 1rem auto 0; }
+      .track {
+        grid-template-columns: 50px 1fr auto;
+        grid-template-areas:
+          "art info action";
+        gap: .5rem;
+      }
+      .track-art { grid-area: art; }
+      .track-info { grid-area: info; }
+      .track-action { grid-area: action; }
+      .track-duration { display: none; }
+    }
+    @media (max-width: 576px) {
+      #mp-volume, #mp-time { display: none; }
+      #mp-seek { margin: 0 .5rem; }
+    }
+  </style>
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Music Platform</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navMain">
+<body>
+
+  <!-- Navbar с поиском -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container d-flex align-items-center">
+      <a class="navbar-brand" href="{% url 'song_list' %}">Music Platform</a>
+
+      <div class="search-bar">
+        <form action="{% url 'song_search' %}" method="get" class="d-flex">
+          <input name="genre"
+                 class="form-control"
+                 placeholder="Введіть жанр для пошуку"
+                 value="{{ request.GET.genre|default:'' }}">
+          <button class="btn btn-success ms-2">
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+      </div>
+
       <ul class="navbar-nav ms-auto">
         {% if user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'my_playlists' %}">Мої плейлисти</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Вийти</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'my_playlists' %}">Мої плейлисти</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">Вийти</a>
+          </li>
         {% else %}
-          <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Увійти</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Реєстрація</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login' %}">Увійти</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'register' %}">Реєстрація</a>
+          </li>
         {% endif %}
       </ul>
     </div>
-  </div>
-</nav>
+  </nav>
 
-<div class="container mt-5">
-  <h2 class="mb-4">Список пісень</h2>
-
-  <form class="row g-2 mb-4" action="{% url 'song_search' %}" method="get">
-    <div class="col-auto flex-grow-1">
-      <input type="text" class="form-control" name="genre" placeholder="Шукати за жанром" value="{{ request.GET.genre }}">
-    </div>
-    <div class="col-auto">
-      <button type="submit" class="btn btn-primary">Пошук</button>
-    </div>
-  </form>
-
-  <div class="list-group shadow-sm">
+  <!-- Tracks -->
+  <div class="container tracks-list">
     {% for song in songs %}
-      <a href="{% url 'song_detail' song.id %}" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h5 class="mb-1">{{ song.title }}</h5>
-          <small class="text-muted">{{ song.genre }}</small>
+      <div class="track"
+           data-url="{{ song.audio_file.url }}"
+           data-title="{{ song.title }} — {{ song.artist }}"
+           data-art="{% if song.cover_image %}{{ song.cover_image.url }}{% else %}{% static 'music/img/placeholder.png' %}{% endif %}">
+        <div class="track-art">
+          {% if song.cover_image %}
+            <img src="{{ song.cover_image.url }}" alt="cover">
+          {% else %}
+            <img src="{% static 'music/img/placeholder.png' %}" alt="no cover">
+          {% endif %}
         </div>
-        <p class="mb-1">{{ song.artist }}</p>
-      </a>
+        <div class="track-info">
+          <div class="track-name">{{ song.title }}</div>
+          <div class="track-artist">{{ song.artist }}</div>
+        </div>
+        <div class="track-duration">—:—</div>
+        <div class="track-action">
+          <button class="play-btn"><i class="bi bi-play-fill"></i></button>
+        </div>
+      </div>
     {% empty %}
-      <div class="alert alert-warning">Пісень немає.</div>
+      <p class="text-center text-muted">Пісень немає.</p>
     {% endfor %}
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Mini‑player -->
+  <div id="mini-player">
+    <div class="mp-art">
+      <img src="{% static 'music/img/placeholder.png' %}" alt="">
+    </div>
+    <div class="mp-info">
+      <div class="mp-title">Немає треків</div>
+      <div class="mp-artist"></div>
+    </div>
+    <div class="mp-controls">
+      <button id="mp-prev" class="mp-btn"><i class="bi bi-skip-start-fill"></i></button>
+      <button id="mp-play" class="mp-btn"><i class="bi bi-play-fill"></i></button>
+      <button id="mp-next" class="mp-btn"><i class="bi bi-skip-end-fill"></i></button>
+    </div>
+    <input type="range" id="mp-seek" min="0" max="100" value="0">
+    <div id="mp-time">0:00 / 0:00</div>
+    <input type="range" id="mp-volume" min="0" max="1" step="0.01" value="0.8">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const tracks   = document.querySelectorAll('.track');
+    const artEl    = document.querySelector('#mini-player .mp-art img');
+    const titleEl  = document.querySelector('.mp-title');
+    const artistEl = document.querySelector('.mp-artist');
+    const btnPlay  = document.getElementById('mp-play');
+    const btnPrev  = document.getElementById('mp-prev');
+    const btnNext  = document.getElementById('mp-next');
+    const seek     = document.getElementById('mp-seek');
+    const timeDisp = document.getElementById('mp-time');
+    const volume   = document.getElementById('mp-volume');
+
+    let list = [], idx = 0;
+    const fmt = s => {
+      const m = Math.floor(s/60), r = Math.floor(s%60);
+      return `${m}:${r<10?'0':''}${r}`;
+    };
+
+    tracks.forEach((trk,i)=>{
+      list.push({
+        url:   trk.dataset.url,
+        title: trk.dataset.title,
+        art:   trk.dataset.art,
+        el:    trk
+      });
+    });
+
+    const audio = new Audio();
+    audio.volume = volume.value;
+
+    function highlight(i){
+      tracks.forEach(t=>{
+        t.classList.remove('active');
+        t.querySelector('.play-btn').classList.remove('active');
+      });
+      const row = list[i].el;
+      row.classList.add('active');
+      row.querySelector('.play-btn').classList.add('active');
+    }
+
+    function loadTrack(i){
+      if(!list[i]) return;
+      idx = i;
+      audio.src = list[i].url;
+      artEl.src = list[i].art;
+      titleEl.textContent = list[i].title;
+      highlight(i);
+    }
+
+    function playPause(){
+      if(audio.paused){
+        audio.play();
+        btnPlay.innerHTML = '<i class="bi bi-pause-fill"></i>';
+      } else {
+        audio.pause();
+        btnPlay.innerHTML = '<i class="bi bi-play-fill"></i>';
+      }
+    }
+
+    btnPlay.addEventListener('click', playPause);
+    btnPrev.addEventListener('click', ()=>{
+      idx = idx>0? idx-1 : list.length-1;
+      loadTrack(idx); audio.play(); btnPlay.innerHTML='<i class="bi bi-pause-fill"></i>';
+    });
+    btnNext.addEventListener('click', ()=>{
+      idx = idx<list.length-1? idx+1 : 0;
+      loadTrack(idx); audio.play(); btnPlay.innerHTML='<i class="bi bi-pause-fill"></i>';
+    });
+
+    audio.addEventListener('loadedmetadata', ()=>{
+      timeDisp.textContent = `0:00 / ${fmt(audio.duration)}`;
+      const durCell = list[idx].el.querySelector('.track-duration');
+      if(durCell) durCell.textContent = fmt(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', ()=>{
+      if(audio.duration){
+        seek.value = (audio.currentTime / audio.duration) * 100;
+        timeDisp.textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
+      }
+    });
+
+    seek.addEventListener('input', ()=>{
+      if(audio.duration) audio.currentTime = (seek.value/100)*audio.duration;
+    });
+    volume.addEventListener('input', ()=> audio.volume = volume.value);
+    audio.addEventListener('ended', ()=> btnNext.click());
+
+    tracks.forEach((trk,i)=>{
+      trk.addEventListener('click', ()=>{
+        loadTrack(i); audio.play(); btnPlay.innerHTML='<i class="bi bi-pause-fill"></i>';
+      });
+      trk.querySelector('.play-btn').addEventListener('click', e=>{
+        e.stopPropagation();
+        loadTrack(i); audio.play(); btnPlay.innerHTML='<i class="bi bi-pause-fill"></i>';
+      });
+    });
+
+    if(list.length) loadTrack(0);
+  </script>
 </body>
 </html>

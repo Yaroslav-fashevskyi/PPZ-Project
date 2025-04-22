@@ -17,13 +17,29 @@
   <h2 class="mb-4">Результати пошуку “{{ genre }}”</h2>
   <div class="list-group shadow-sm">
     {% for song in songs %}
-      <a href="{% url 'song_detail' song.id %}" class="list-group-item list-group-item-action">
-        <strong>{{ song.title }}</strong> — {{ song.artist }}
-      </a>
+      <div class="list-group-item list-group-item-action flex-column align-items-start position-relative">
+        <div class="d-flex w-100 justify-content-between">
+          <strong>{{ song.title }}</strong>
+          <small class="text-muted">{{ song.artist }}</small>
+        </div>
+
+        {% if song.audio_file %}
+          <audio controls preload="none" class="w-100 mt-2">
+            <source src="{{ song.audio_file.url }}" type="audio/mpeg">
+            Ваш браузер не підтримує відтворення аудіо.
+          </audio>
+        {% else %}
+          <div class="mt-2"><em>Аудіофайл не завантажено.</em></div>
+        {% endif %}
+
+        <!-- щоб клік по картці вів на деталь -->
+        <a href="{% url 'song_detail' song.id %}" class="stretched-link"></a>
+      </div>
     {% empty %}
       <div class="alert alert-warning">Нічого не знайдено.</div>
     {% endfor %}
   </div>
+
   <a href="{% url 'song_list' %}" class="btn btn-outline-secondary mt-4">← Назад</a>
 </div>
 

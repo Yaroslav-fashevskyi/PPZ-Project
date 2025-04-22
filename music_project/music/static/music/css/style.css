@@ -1,0 +1,75 @@
+/* Базові стилі */
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+/* Навігація */
+nav {
+  background: #444;
+  color: #fff;
+  padding: 0.5em 1em;
+}
+nav a {
+  color: #ffd700;
+  text-decoration: none;
+  margin-right: 1em;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Контент */
+h2 {
+  margin: 1em 0 0.5em;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+ul li {
+  background: #fff;
+  margin-bottom: 0.5em;
+  padding: 0.5em;
+  border-radius: 4px;
+}
+
+/* Форми */
+form {
+  margin: 1em 0;
+  padding: 1em;
+  background: #fff;
+  border-radius: 4px;
+}
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form button {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 0.5em;
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+form button {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+form button:hover {
+  background: #218838;
+}
+
+/* Кнопка видалення */
+button.delete {
+  background: #dc3545;
+}
+button.delete:hover {
+  background: #c82333;
+}

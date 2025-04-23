@@ -156,3 +156,31 @@ body {
 .spotify-table tbody tr.active .play-icon {
   display: inline-block !important;
 }
+
+
+<style>
+  /* ... your existing CSS ... */
+
+  /* Custom scrollbar for WebKit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #222;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1db954;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #17c04c;
+  }
+
+  /* Custom scrollbar for Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #1db954 #222;
+  }
+</style>

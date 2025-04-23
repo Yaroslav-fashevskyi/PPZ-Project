@@ -73,3 +73,32 @@ button.delete {
 button.delete:hover {
   background: #c82333;
 }
+
+
+/* ——— Кастомні скроллбари ——— */
+
+/* Для WebKit-браузерів (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;            /* ширина вертикального скролу */
+  height: 8px;           /* висота горизонтального скролу */
+}
+
+::-webkit-scrollbar-track {
+  background: #222;      /* колір фону «треку» */
+  border-radius: 4px;    /* заокруглення країв треку */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1db954;   /* колір «повзунка» */
+  border-radius: 4px;    /* заокруглення країв повзунка */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #17c04c;   /* колір при ховері */
+}
+
+/* Для Firefox */
+* {
+  scrollbar-width: thin;            /* тонкий скролбар */
+  scrollbar-color: #1db954 #222;    /* перший колір — «повзунок», другий — «трек» */
+}

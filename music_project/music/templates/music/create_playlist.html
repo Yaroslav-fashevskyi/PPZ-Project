@@ -1,11 +1,25 @@
 {% extends 'music/base.html' %}
 
 {% block content %}
-  <h1>Створення плейлиста</h1>
-  <form method="post">
-    {% csrf_token %}
-    <label for="name">Назва плейлиста:</label>
-    <input type="text" name="name" id="name">
-    <button type="submit">Створити</button>
-  </form>
+  <div class="container mt-5">
+    <div class="card bg-dark text-light mx-auto" style="max-width: 500px;">
+      <div class="card-header border-0" style="background: #1db954;">
+        <h3 class="mb-0">Створити новий плейлист1</h3>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="name" class="form-label text-light">Назва плейлиста</label>
+            <input type="text"
+                   class="form-control bg-secondary text-light border-0"
+                   id="name"
+                   name="name"
+                   placeholder="Введіть назву">
+          </div>
+          <button type="submit" class="btn btn-success w-100">Створити</button>
+        </form>
+      </div>
+    </div>
+  </div>
 {% endblock %}

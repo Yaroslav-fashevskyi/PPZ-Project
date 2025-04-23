@@ -1,41 +1,245 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{{ song.title }} — Music Platform</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      padding-bottom: 120px;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-y: auto;                /* дозволити прокрутку */
+    }
+    a { text-decoration: none; }
+
+    .navbar { background: #181818; }
+    .navbar-brand { color: #1db954 !important; font-weight: bold; }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto 0;
+      overflow-y: auto;                /* окрема прокрутка, якщо потрібно */
+    }
+    .card {
+      background: #181818;
+      border: none;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,.8);
+    }
+    .card-title { color: #fff; font-size: 1.75rem; }
+    .card-subtitle { color: #b3b3b3; font-size: 1.25rem; margin-bottom: 1.5rem; }
+    .card-text {
+      color: #fff;                     /* БІЛИЙ текст опису */
+    }
+    .card-text strong { color: #1db954; }
+
+    .cover-art {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      background: #333;
+    }
+
+    /* Lyrics */
+    .lyrics-panel {
+      background: #181818;
+      color: #ddd;
+      border-left: 3px solid #1db954;
+      padding: .75rem 1rem;
+      margin-top: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      border-radius: 0 6px 6px 0;
+    }
+    .lyrics-panel h5 { margin-top: 0; color: #1db954; }
+    .lyrics-panel ol {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .lyrics-panel li { padding: .25rem 0; }
+    .lyrics-panel li.active {
+      background: rgba(29,185,84,0.2);
+      color: #1db954;
+    }
+
+    /* Global custom scrollbar */
+    ::-webkit-scrollbar { width:8px; height:8px }
+    ::-webkit-scrollbar-track { background:#222; border-radius:4px }
+    ::-webkit-scrollbar-thumb { background:#1db954; border-radius:4px }
+    ::-webkit-scrollbar-thumb:hover { background:#17c84a }
+    * { scrollbar-width:thin; scrollbar-color:#1db954 #222 }
+
+    /* Mini-player */
+    #mini-player {
+      position: fixed; bottom:0; left:0; right:0;
+      background:#181818; display:flex; align-items:center;
+      padding:10px 20px; box-shadow:0 -3px 6px rgba(0,0,0,.8);
+      z-index:1000;
+    }
+    .mp-eq { display:flex; align-items:center; gap:4px; margin-right:1rem; }
+    .eq-bar {
+      width:4px; background:#1db954; border-radius:2px;
+      animation:eq .8s infinite ease-in-out;
+    }
+    @keyframes eq { 0%,100%{height:8px}50%{height:24px} }
+
+    #mini-player .mp-art {
+      width:50px; height:50px; border-radius:4px;
+      overflow:hidden; background:#333; margin-right:1rem;
+    }
+    #mini-player .mp-art img { width:100%; height:100%; object-fit:cover; }
+    #mini-player .mp-info { flex:1; overflow:hidden; }
+    #mini-player .mp-title {
+      font-weight:500; white-space:nowrap;
+      overflow:hidden; text-overflow:ellipsis;
+    }
+    #mini-player .mp-artist { color:#b3b3b3; font-size:.85rem; }
+    #mini-player .mp-controls {
+      display:flex; align-items:center; gap:.5rem; margin-right:1rem;
+    }
+    #mini-player .mp-btn {
+      background:none; border:none; color:#b3b3b3; font-size:1.3rem; cursor:pointer;
+    }
+    #mini-player .mp-btn:hover { color:#fff; }
+    #mp-seek { flex:2; margin:0 1rem; }
+    #mp-time {
+      min-width:80px; text-align:center;
+      color:#b3b3b3; font-size:.8rem;
+    }
+    #mp-volume { width:100px; margin-left:1rem; }
+  </style>
 </head>
-<body class="bg-light">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'song_list' %}">Music Platform</a>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'song_list' %}">Music Platform</a>
     </div>
   </nav>
 
-  <div class="container mt-5">
-    <div class="card shadow">
-      <div class="card-body">
-        <h2 class="card-title">{{ song.title }}</h2>
-        <h5 class="card-subtitle mb-3 text-muted">{{ song.artist }}</h5>
+  <!-- Detail Card -->
+  <div class="container">
+    <div class="card">
+      {% if song.cover_image %}
+        <img src="{{ song.cover_image.url }}" alt="Cover" class="cover-art">
+      {% endif %}
 
-        <p class="card-text"><strong>Жанр:</strong> {{ song.genre }}</p>
-        <p class="card-text"><strong>Стиль:</strong> {{ song.style }}</p>
-        <p class="card-text">{{ song.description }}</p>
+      <h2 class="card-title">{{ song.title }}</h2>
+      <h5 class="card-subtitle">{{ song.artist }}</h5>
 
-        {% if song.audio_file %}
-          <audio controls class="w-100 mt-4">
-            <source src="{{ song.audio_file.url }}" type="audio/mpeg">
-            Ваш браузер не підтримує відтворення аудіо.
-          </audio>
-        {% else %}
-          <div class="alert alert-warning mt-4">Аудіофайл не завантажено.</div>
-        {% endif %}
+      <p class="card-text"><strong>Жанр:</strong> {{ song.genre }}</p>
+      <p class="card-text"><strong>Стиль:</strong> {{ song.style }}</p>
+      <p class="card-text">{{ song.description }}</p>
 
-        <a href="{% url 'song_list' %}" class="btn btn-outline-primary mt-4">← Повернутися</a>
+      <!-- Lyrics -->
+      <div class="lyrics-panel">
+        <h5>Текст пісні</h5>
+        <ol id="dp-lyrics"></ol>
       </div>
+
+      <a href="{% url 'song_list' %}" class="btn btn-outline-primary mt-4">
+        <i class="bi bi-arrow-left"></i> Повернутися
+      </a>
     </div>
   </div>
+
+  <!-- Mini-player -->
+  <div id="mini-player">
+    <div class="mp-eq">
+      <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    </div>
+    <div class="mp-art">
+      {% if song.cover_image %}
+        <img src="{{ song.cover_image.url }}" alt="">
+      {% else %}
+        <img src="{% static 'music/img/placeholder.png' %}" alt="">
+      {% endif %}
+    </div>
+    <div class="mp-info">
+      <div id="mp-title" class="mp-title">{{ song.title }}</div>
+      <div class="mp-artist">{{ song.artist }}</div>
+    </div>
+    <div class="mp-controls">
+      <button id="mp-prev" class="mp-btn"><i class="bi bi-skip-start-fill"></i></button>
+      <button id="mp-play" class="mp-btn"><i class="bi bi-play-fill"></i></button>
+      <button id="mp-next" class="mp-btn"><i class="bi bi-skip-end-fill"></i></button>
+    </div>
+    <input type="range" id="mp-seek" min="0" max="100" value="0">
+    <div id="mp-time">0:00 / 0:00</div>
+    <input type="range" id="mp-volume" min="0" max="1" step=".01" value="0.8">
+  </div>
+
+  <script>
+    // подібно до коду з головної, тільки для однієї пісні
+    const audio   = new Audio("{{ song.audio_file.url }}");
+    const btnPlay = document.getElementById("mp-play");
+    const btnPrev = document.getElementById("mp-prev");
+    const btnNext = document.getElementById("mp-next");
+    const seek    = document.getElementById("mp-seek");
+    const timeEl  = document.getElementById("mp-time");
+    const vol     = document.getElementById("mp-volume");
+    const lyricsOl= document.getElementById("dp-lyrics");
+
+    let synced = [], idxLine = 0;
+
+    function fmt(s){ const m=Math.floor(s/60),r=Math.floor(s%60);return `${m}:${r<10?'0':''}${r}`; }
+
+    // Завантажуємо синхронізований текст
+    fetch(`https://lrclib.net/api/search?artist_name=${encodeURIComponent("{{ song.artist }}")}&track_name=${encodeURIComponent("{{ song.title }}")}`)
+      .then(r=>r.json())
+      .then(j=>{
+        if(j.length && j[0].syncedLyrics){
+          synced = j[0].syncedLyrics.split('\n')
+                     .map(l=>l.match(/\[([0-9:.]+)\](.*)/))
+                     .filter(Boolean)
+                     .map(([,t,text])=>{
+                       const [mm,ss]=t.split(':').map(parseFloat);
+                       return { time:mm*60+ss, text };
+                     });
+          lyricsOl.innerHTML = synced.map((ln,i)=>`<li data-i="${i}">${ln.text}</li>`).join("");
+        }
+      });
+
+    btnPlay.onclick = ()=>{
+      if(audio.paused){
+        audio.play(); btnPlay.innerHTML='<i class="bi bi-pause-fill"></i>';
+      } else {
+        audio.pause(); btnPlay.innerHTML='<i class="bi bi-play-fill"></i>';
+      }
+    };
+    btnPrev.onclick = ()=> audio.currentTime = 0;
+    btnNext.onclick = ()=> audio.currentTime = audio.duration;
+
+    audio.addEventListener("loadedmetadata",()=>{
+      timeEl.textContent = `0:00 / ${fmt(audio.duration)}`;
+    });
+    audio.addEventListener("timeupdate",()=>{
+      seek.value = (audio.currentTime/audio.duration)*100;
+      timeEl.textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
+
+      // підсвічуємо поточний рядок
+      while(idxLine < synced.length-1 && audio.currentTime >= synced[idxLine+1].time) idxLine++;
+      const items = lyricsOl.querySelectorAll("li");
+      items.forEach(li=>li.classList.toggle("active", +li.dataset.i===idxLine));
+      if(items[idxLine]) items[idxLine].scrollIntoView({ block:"center", behavior:"smooth" });
+    });
+
+    seek.oninput = ()=> audio.currentTime = (seek.value/100)*audio.duration;
+    vol .oninput = ()=> audio.volume = vol.value;
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

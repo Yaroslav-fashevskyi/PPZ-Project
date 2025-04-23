@@ -14,7 +14,7 @@ def register_view(request):
             return redirect('song_list')
     else:
         form = RegistrationForm()
-    return render(request, 'music/registration.html', {'form': form})
+    return render(request, 'music/register.html', {'form': form})
 
 def login_view(request):
     if request.method == 'POST':
@@ -87,3 +87,9 @@ def delete_playlist_view(request, pl_id):
         pl.delete()
         return redirect('my_playlists')
     return render(request, 'music/confirm_delete.html', {'playlist': pl})
+
+def playlist_remove_song(request, pl_id, song_id):
+    playlist = get_object_or_404(Playlist, id=pl_id, owner=request.user)
+    song = get_object_or_404(Song, id=song_id)
+    playlist.songs.remove(song)
+    return redirect('playlist_detail', pl_id=pl_id)

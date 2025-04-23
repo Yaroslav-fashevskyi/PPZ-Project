@@ -10,135 +10,211 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <!-- Ваш кастомний CSS з test1.css -->
+  <!-- Ваш кастомний CSS -->
   <link href="{% static 'music/css/test1.css' %}" rel="stylesheet">
+
+  <style>
+    /* Основні кольори */
+    body { background: #121212; color: #fff; padding-bottom: 120px; font-family: 'Segoe UI', sans-serif; }
+    .navbar { background: #181818; }
+    .navbar-brand { color: #1db954 !important; font-weight: bold; }
+
+    /* Карти */
+    .card { background: #181818; color: #ddd; border: none; }
+    .card-title, .card-text { color: #fff; }
+    .text-muted { color: #aaa !important; }
+
+    /* Списки */
+    .list-group-item { background: #282828; color: #ddd; border: none; }
+    .list-group-item a.btn-primary { background: #1db954; border: none; }
+    .list-group-item a.btn-primary:hover { background: #17c84a; }
+
+    /* Кнопки */
+    .btn-danger { background: #dc3545; border: none; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-link { color: #1db954; }
+    .btn-link:hover { color: #17c84a; text-decoration: none; }
+
+    /* Міні-плеєр */
+    #mini-player {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #181818; display: flex; align-items: center;
+      padding: 10px 20px; box-shadow: 0 -3px 6px rgba(0,0,0,.8); z-index: 1000;
+    }
+    .mp-eq { display: flex; align-items: center; gap: 4px; margin-right: 1rem; }
+    .eq-bar { width: 4px; background: #1db954; border-radius: 2px; animation: eq .8s infinite ease-in-out; }
+    @keyframes eq { 0%,100%{height:8px}50%{height:24px} }
+
+    #mini-player .mp-art { width: 50px; height: 50px; border-radius: 4px; overflow: hidden; background: #333; margin-right: 1rem; }
+    #mini-player .mp-art img { width:100%; height:100%; object-fit:cover; }
+    #mini-player .mp-info { flex:1; overflow:hidden; color:#ddd; }
+    #mini-player .mp-title { font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #mini-player .mp-artist { color:#aaa; font-size:.85rem; }
+    #mini-player .mp-controls .mp-btn { background:none; border:none; color:#b3b3b3; font-size:1.3rem; margin:0 .5rem; cursor:pointer; }
+    #mini-player .mp-controls .mp-btn:hover { color:#fff; }
+    #mp-seek { flex:2; margin: 0 1rem; }
+    #mp-time { min-width:80px; text-align:center; color:#b3b3b3; font-size:.8rem; }
+
+    /* Глобальний скролбар */
+    ::-webkit-scrollbar { width:8px; height:8px; }
+    ::-webkit-scrollbar-track { background:#222; border-radius:4px; }
+    ::-webkit-scrollbar-thumb { background:#1db954; border-radius:4px; }
+    ::-webkit-scrollbar-thumb:hover { background:#17c84a; }
+    * { scrollbar-width: thin; scrollbar-color: #1db954 #222; }
+  </style>
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'song_list' %}">Music Platform</a>
-  </div>
-</nav>
+<body>
 
-<div class="container mt-5">
-  <div class="card mb-4 shadow">
-    <div class="card-body">
-      <h2 class="card-title">{{ playlist.name }}</h2>
-      <p class="card-text">
-        <small class="text-muted">
-          Власник: {{ playlist.owner.username }} |
-          Створено: {{ playlist.created_at }}
-        </small>
-      </p>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'song_list' %}">Music Platform</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- Заголовок плейлиста -->
+    <div class="card mb-4 shadow">
+      <div class="card-body">
+        <h2 class="card-title">{{ playlist.name }}</h2>
+        <p class="card-text">
+          <small class="text-muted">
+            Власник: {{ playlist.owner.username }} |
+            Створено: {{ playlist.created_at }}
+          </small>
+        </p>
+      </div>
+    </div>
+
+    <div class="row gx-4">
+      <!-- Ліва колонка: поточні пісні -->
+      <div class="col-md-6">
+        <h4 class="mb-3">Вміст плейлиста</h4>
+        <ul class="list-group mb-3 shadow-sm">
+          {% for s in playlist.songs.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              {{ s.title }} — {{ s.artist }}
+              <form method="post" action="{% url 'playlist_remove_song' playlist.id s.id %}">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-danger">Видалити</button>
+              </form>
+            </li>
+          {% empty %}
+            <li class="list-group-item">Плейлист порожній.</li>
+          {% endfor %}
+        </ul>
+        <form method="post" action="{% url 'playlist_delete' playlist.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Видалити плейлист</button>
+          <a href="{% url 'my_playlists' %}" class="btn btn-link ms-2">Скасувати</a>
+        </form>
+      </div>
+
+      <!-- Права колонка: додати пісню -->
+      <div class="col-md-6">
+        <h4 class="mb-3">Додати пісню</h4>
+        <ul class="list-group shadow-sm">
+          {% for s in songs %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              {{ s.title }} — {{ s.artist }}
+              <a href="{% url 'playlist_add_song' playlist.id s.id %}"
+                 class="btn btn-sm btn-primary">Додати</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-md-6">
-      <h4>Вміст плейлиста</h4>
-      <ul class="list-group mb-4 shadow-sm">
-        {% for s in playlist.songs.all %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ s.title }} — {{ s.artist }}
-          </li>
-        {% empty %}
-          <li class="list-group-item">Плейлист порожній.</li>
-        {% endfor %}
-      </ul>
-      <form method="post" action="{% url 'playlist_delete' playlist.id %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Видалити плейлист</button>
-        <a href="{% url 'my_playlists' %}" class="btn btn-link">Скасувати</a>
-      </form>
+  <!-- Міні-плеєр унизу -->
+  <div id="mini-player">
+    <div class="mp-eq">
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
     </div>
-
-    <div class="col-md-6">
-      <h4>Додати пісню</h4>
-      <ul class="list-group shadow-sm">
-        {% for s in songs %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ s.title }} — {{ s.artist }}
-            <a href="{% url 'playlist_add_song' pl_id=playlist.id song_id=s.id %}"
-               class="btn btn-sm btn-primary">Додати</a>
-          </li>
-        {% endfor %}
-      </ul>
+    <div class="mp-art"><img src="{% static 'music/img/placeholder.png' %}" alt=""></div>
+    <div class="mp-info">
+      <div class="mp-title">Немає треків</div>
+      <div class="mp-artist"></div>
     </div>
+    <div class="mp-controls">
+      <button id="mp-prev" class="mp-btn"><i class="bi bi-skip-start-fill"></i></button>
+      <button id="mp-play" class="mp-btn"><i class="bi bi-play-fill"></i></button>
+      <button id="mp-next" class="mp-btn"><i class="bi bi-skip-end-fill"></i></button>
+    </div>
+    <input type="range" id="mp-seek" min="0" max="100" value="0">
+    <div id="mp-time">0:00 / 0:00</div>
   </div>
-</div>
 
-<!-- ===== Mini Player ===== -->
-<div id="mini-player">
-  <button id="mp-prev" class="mp-btn"><i class="bi bi-skip-start-fill"></i></button>
-  <button id="mp-play" class="mp-btn"><i class="bi bi-play-fill"></i></button>
-  <button id="mp-next" class="mp-btn"><i class="bi bi-skip-end-fill"></i></button>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Формуємо список треків із цього плейлиста
+    const mpList = [
+      {% for s in playlist.songs.all %}
+        { url: "{{ s.audio_file.url }}", title: "{{ s.title }} — {{ s.artist }}" }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
 
-  <div id="mp-track-info">Немає треків</div>
-  <input type="range" id="mp-seek" value="0" min="0" max="100">
-</div>
+    let mpIndex = 0;
+    const audio   = new Audio(mpList[0]?.url || '');
+    const btnPlay = document.getElementById('mp-play');
+    const btnPrev = document.getElementById('mp-prev');
+    const btnNext = document.getElementById('mp-next');
+    const info    = document.querySelector('#mini-player .mp-title');
+    const artist  = document.querySelector('#mini-player .mp-artist');
+    const seek    = document.getElementById('mp-seek');
+    const timeDisp= document.getElementById('mp-time');
+    const artEl   = document.querySelector('#mini-player .mp-art img');
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  // Збираємо треки з плейлиста
-  const mpList = [
-    {% for s in playlist.songs.all %}
-      { url: "{{ s.audio_file.url }}", title: "{{ s.title }} — {{ s.artist }}" }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ];
-
-  let mpIndex = 0;
-  const audio   = new Audio(mpList[0]?.url);
-  const btnPlay = document.getElementById('mp-play');
-  const btnPrev = document.getElementById('mp-prev');
-  const btnNext = document.getElementById('mp-next');
-  const info    = document.getElementById('mp-track-info');
-  const seek    = document.getElementById('mp-seek');
-
-  function loadTrack(i) {
-    audio.src = mpList[i].url;
-    info.textContent = mpList[i].title;
-    audio.load();
-  }
-
-  function playPause() {
-    if (audio.paused) {
-      audio.play();
-      btnPlay.firstElementChild.className = 'bi bi-pause-fill';
-    } else {
-      audio.pause();
-      btnPlay.firstElementChild.className = 'bi bi-play-fill';
+    function loadTrack(i) {
+      const track = mpList[i];
+      audio.src = track.url;
+      info.textContent   = track.title.split(' — ')[0];
+      artist.textContent = track.title.split(' — ')[1] || '';
+      audio.load();
     }
-  }
 
-  btnPlay.addEventListener('click', playPause);
-  btnPrev.addEventListener('click', () => {
-    mpIndex = mpIndex > 0 ? mpIndex - 1 : mpList.length - 1;
-    loadTrack(mpIndex);
-    audio.play();
-    btnPlay.firstElementChild.className = 'bi bi-pause-fill';
-  });
-  btnNext.addEventListener('click', () => {
-    mpIndex = mpIndex < mpList.length - 1 ? mpIndex + 1 : 0;
-    loadTrack(mpIndex);
-    audio.play();
-    btnPlay.firstElementChild.className = 'bi bi-pause-fill';
-  });
-
-  audio.addEventListener('timeupdate', () => {
-    if (!isNaN(audio.duration)) {
-      seek.value = (audio.currentTime / audio.duration) * 100;
+    function playPause() {
+      if (audio.paused) {
+        audio.play();
+        btnPlay.firstElementChild.className = 'bi bi-pause-fill';
+      } else {
+        audio.pause();
+        btnPlay.firstElementChild.className = 'bi bi-play-fill';
+      }
     }
-  });
-  seek.addEventListener('input', () => {
-    if (!isNaN(audio.duration)) {
-      audio.currentTime = (seek.value / 100) * audio.duration;
-    }
-  });
-  audio.addEventListener('ended', () => btnNext.click());
 
-  // Завантажуємо перший трек
-  if (mpList.length) loadTrack(0);
-</script>
+    btnPlay.addEventListener('click', playPause);
+    btnPrev.addEventListener('click', () => {
+      mpIndex = mpIndex > 0 ? mpIndex - 1 : mpList.length - 1;
+      loadTrack(mpIndex); audio.play(); btnPlay.firstElementChild.className = 'bi bi-pause-fill';
+    });
+    btnNext.addEventListener('click', () => {
+      mpIndex = mpIndex < mpList.length - 1 ? mpIndex + 1 : 0;
+      loadTrack(mpIndex); audio.play(); btnPlay.firstElementChild.className = 'bi bi-pause-fill';
+    });
 
+    audio.addEventListener('loadedmetadata', () => {
+      timeDisp.textContent = `0:00 / ${Math.floor(audio.duration/60)}:${('0'+Math.floor(audio.duration%60)).slice(-2)}`;
+    });
+    audio.addEventListener('timeupdate', () => {
+      if (!isNaN(audio.duration)) {
+        seek.value = (audio.currentTime / audio.duration) * 100;
+        timeDisp.textContent = 
+          `${Math.floor(audio.currentTime/60)}:${('0'+Math.floor(audio.currentTime%60)).slice(-2)} / `+
+          `${Math.floor(audio.duration/60)}:${('0'+Math.floor(audio.duration%60)).slice(-2)}`;
+      }
+    });
+    seek.addEventListener('input', () => {
+      if (!isNaN(audio.duration)) {
+        audio.currentTime = (seek.value / 100) * audio.duration;
+      }
+    });
+    audio.addEventListener('ended', () => btnNext.click());
+
+    // Якщо є хоча б один трек — завантажуємо
+    if (mpList.length) loadTrack(0);
+  </script>
 </body>
 </html>

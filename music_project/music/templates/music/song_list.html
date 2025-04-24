@@ -19,6 +19,7 @@
     .navbar-brand { color:#1db954!important; font-weight:bold }
     .nav-link { color:#b3b3b3!important }
     .nav-link:hover { color:#fff!important }
+
     .search-bar .form-control { background:#282828; border:none; color:#fff }
     .search-bar .form-control::placeholder { color:#777 }
     .search-bar .btn { background:#1db954; border:none }
@@ -36,17 +37,9 @@
     .track.active { background:#1db954; box-shadow:inset 0 0 10px #1ed760 }
     .track-art { width:60px;height:60px;overflow:hidden;border-radius:4px;background:#333 }
     .track-art img { width:100%;height:100%;object-fit:cover }
-    .track-info .track-name {
-      font-weight:500; color:#fff;
-      transition: color .2s;
-    }
-    .track-info .track-name:hover {
-      color:#1ed760;
-    }
-    .track-info .track-name a {
-      color: inherit;
-      text-decoration: none;
-    }
+    .track-info .track-name { font-weight:500; color:#fff; transition:color .2s; }
+    .track-info .track-name:hover { color:#1ed760; }
+    .track-info .track-name a { color:inherit; text-decoration:none; }
     .track-info .track-artist { color:#b3b3b3 }
     .track-duration { text-align:right; color:#b3b3b3; }
     .track-action .play-btn { background:none;border:none;color:#b3b3b3;font-size:1.2rem }
@@ -56,6 +49,7 @@
       background:#181818; color:#ddd; border-left:3px solid #1db954;
       padding:.5rem 1rem; margin:0 1rem 1rem; border-radius:0 0 6px 6px;
       font-size:.9rem; overflow-y:auto; max-height:120px; display:none;
+      scrollbar-width:thin; scrollbar-color:#1db954 #181818;
     }
     .lyrics-panel h5 { margin:0 0 .5rem; color:#1db954 }
     .lyrics-panel ol { padding-left:1.2rem; margin:0; list-style:none; }
@@ -87,6 +81,15 @@
       .track { grid-template-columns:50px 1fr 60px; }
       .track-duration { display:none; }
     }
+
+    /* WebKit (Chrome/Safari/Edge) */
+    ::-webkit-scrollbar { width:8px; height:8px; }
+    ::-webkit-scrollbar-track { background:#121212; border-radius:4px; }
+    ::-webkit-scrollbar-thumb { background:#1db954; border-radius:4px; border:2px solid #121212; }
+    ::-webkit-scrollbar-thumb:hover { background:#1ed760; }
+
+    /* Global fallback for other browsers */
+    * { scrollbar-width:thin; scrollbar-color:#1db954 #121212; }
   </style>
 </head>
 <body>
@@ -182,6 +185,7 @@
       return `${m}:${r<10?'0':''}${r}`;
     };
 
+    // Заповнюємо масив треків
     tracks.forEach((trk,i)=>{
       list.push({
         url:   trk.dataset.url,
@@ -195,22 +199,34 @@
     audio.preload = 'metadata';
     audio.volume  = volume.value;
 
-    async function fetchSynced(artist,title){
-      const url = `https://lrclib.net/api/search?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`;
+    // Кеш для текстів
+    const lyricsCache = new Map();
+    let synced = [];
+
+    async function fetchSynced(artist, song){
+      const key = `${artist}:${song}`;
+      if (lyricsCache.has(key)) return lyricsCache.get(key);
       try {
-        const r = await fetch(url), j = await r.json();
-        if(!j.length||!j[0].syncedLyrics) return [];
-        return j[0].syncedLyrics.split('\n')
-                 .map(l=>l.match(/\[([0-9:.]+)\](.*)/))
-                 .filter(Boolean)
-                 .map(([,t,text])=>{
-                   const [mm,ss] = t.split(':').map(parseFloat);
-                   return { time:mm*60+ss, text };
-                 });
-      } catch { return []; }
+        const res = await fetch(`https://lrclib.net/api/search?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(song)}`);
+        const arr = await res.json();
+        let synced = [];
+        if (arr.length && arr[0].syncedLyrics) {
+          synced = arr[0].syncedLyrics.split('\n')
+            .map(l=> l.match(/\[([0-9:.]+)\](.*)/))
+            .filter(Boolean)
+            .map(([,t,text])=>{
+              const [mm,ss]=t.split(':').map(parseFloat);
+              return { time:mm*60+ss, text };
+            });
+        }
+        lyricsCache.set(key, synced);
+        return synced;
+      } catch {
+        lyricsCache.set(key, []);
+        return [];
+      }
     }
 
-    let synced = [];
     function renderLyrics(){
       const ol = tracks[idx].nextElementSibling.querySelector('.lyrics-text');
       ol.innerHTML = synced.map((ln,i)=>`<li data-i="${i}">${ln.text}</li>`).join('');
@@ -220,24 +236,52 @@
       let i = synced.length-1;
       while(i>0 && cur < synced[i].time) i--;
       const items = tracks[idx].nextElementSibling.querySelectorAll('li');
-      items.forEach(li=>li.classList.toggle('active', +li.dataset.i===i));
-      if(items[i]) items[i].scrollIntoView({ block:'center', behavior:'smooth' });
+      items.forEach(li=> li.classList.toggle('active', +li.dataset.i===i));
+      if (items[i]) items[i].scrollIntoView({ block:'center', behavior:'auto' });
     }
 
-    async function loadTrack(i){
-      idx=i; const {url,title,art}=list[i];
-      audio.src=url; audio.load();
-      artEl.src=art;
-      const [song, artist]=title.split(' — ');
-      titleEl.textContent=song;
-      artistEl.textContent=artist||'';
-      tracks.forEach(t=>t.classList.remove('active'));
-      list[i].el.classList.add('active');
+    function loadTrack(i){
+      idx = i;
+      const { url, title, art, el } = list[i];
+      const [song, artist] = title.split(' — ');
 
-      synced = await fetchSynced(artist,song);
-      renderLyrics();
-      document.querySelectorAll('.lyrics-panel').forEach(p=>p.style.display='none');
-      tracks[i].nextElementSibling.style.display='block';
+      // Приховуємо всі панелі й очищаємо тексти
+      document.querySelectorAll('.lyrics-panel').forEach(p=>{
+        p.style.display = 'none';
+        p.querySelector('.lyrics-text').innerHTML = '';
+      });
+      synced = [];
+
+      // Оновлюємо UI
+      audio.src = url;
+      audio.load();
+      artEl.src = art;
+      titleEl.textContent  = song;
+      artistEl.textContent = artist || '';
+      tracks.forEach(t=> t.classList.remove('active'));
+      el.classList.add('active');
+
+      // Показуємо цю панель із завантаженням
+      const panel = el.nextElementSibling;
+      panel.style.display = 'block';
+      panel.querySelector('.lyrics-text').innerHTML = '<li>Завантаження...</li>';
+
+      // Старт відтворення
+      audio.play();
+      btnPlay.innerHTML = '<i class="bi bi-pause-fill"></i>';
+
+      // Асинхронне підвантаження текстів
+      fetchSynced(artist, song).then(data=>{
+        if (idx === i) {
+          synced = data;
+          renderLyrics();
+        }
+      });
+
+      // Префетч наступного
+      const next = (i + 1) % list.length;
+      const [nextSong, nextArtist] = list[next].title.split(' — ');
+      fetchSynced(nextArtist, nextSong);
     }
 
     function playPause(){
@@ -247,35 +291,39 @@
         audio.pause(); btnPlay.innerHTML='<i class="bi bi-play-fill"></i>';
       }
     }
-    btnPlay.addEventListener('click',playPause);
-    btnPrev.addEventListener('click',()=>{ idx=idx>0?idx-1:list.length-1; loadTrack(idx); audio.play(); });
-    btnNext.addEventListener('click',()=>{ idx=idx<list.length-1?idx+1:0; loadTrack(idx); audio.play(); });
 
-    audio.addEventListener('loadedmetadata',()=>{
-      timeDisp.textContent=`0:00 / ${fmt(audio.duration)}`;
-      const dc=list[idx].el.querySelector('.track-​duration');
-      if(dc) dc.textContent=fmt(audio.duration);
+    btnPlay.addEventListener('click', playPause);
+    btnPrev.addEventListener('click', ()=> loadTrack(idx>0?idx-1:list.length-1));
+    btnNext.addEventListener('click', ()=> loadTrack(idx<list.length-1?idx+1:0));
+
+    audio.addEventListener('loadedmetadata', ()=>{
+      timeDisp.textContent = `0:00 / ${fmt(audio.duration)}`;
+      const dc = list[idx].el.querySelector('.track-duration');
+      if (dc) dc.textContent = fmt(audio.duration);
     });
-    audio.addEventListener('timeupdate',()=>{
-      if(audio.duration){
-        seek.value=(audio.currentTime/audio.duration)*100;
-        timeDisp.textContent=`${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
-        highlightLine();
-      }
+    audio.addEventListener('timeupdate', ()=>{
+      if (!audio.duration) return;
+      seek.value = (audio.currentTime / audio.duration) * 100;
+      timeDisp.textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
+      highlightLine();
     });
 
-    seek.addEventListener('input',()=>{ if(audio.duration) audio.currentTime=(seek.value/100)*audio.duration; });
-    volume.addEventListener('input',()=> audio.volume=volume.value);
-    audio.addEventListener('ended',()=> btnNext.click());
+    seek.addEventListener('input', ()=> {
+      if (audio.duration) audio.currentTime = (seek.value / 100) * audio.duration;
+    });
+    volume.addEventListener('input', ()=> audio.volume = volume.value);
+    audio.addEventListener('ended', ()=> loadTrack((idx + 1) % list.length));
 
     tracks.forEach((trk,i)=>{
-      trk.querySelector('.play-btn').addEventListener('click',e=>{
-        e.stopPropagation(); loadTrack(i); audio.play(); btnPlay.innerHTML='<i class="bi bi-pause-fill"></i>';
+      trk.querySelector('.play-btn').addEventListener('click', e=>{
+        e.stopPropagation();
+        loadTrack(i);
       });
-      trk.addEventListener('click',()=>{ loadTrack(i); audio.play(); btnPlay.innerHTML='<i class="bi bi-pause-fill"></i>'; });
+      trk.addEventListener('click', ()=> loadTrack(i));
     });
 
-    if(list.length) loadTrack(0);
+    // Старт з першого
+    if (list.length) loadTrack(0);
   </script>
 </body>
 </html>

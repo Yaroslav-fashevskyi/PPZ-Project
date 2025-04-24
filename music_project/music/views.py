@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import RegistrationForm, LoginForm, PlaylistForm
-from .models import Song, Playlist
+from .models import Song, Playlist, Genre
 
 # ————————— Anonymous —————————
 def register_view(request):
@@ -36,10 +36,27 @@ def song_list_view(request):
     return render(request, 'music/song_list.html', {'songs': songs})
 
 def song_search_view(request):
-    genre = request.GET.get('genre', '')
-    songs = Song.objects.filter(genre__icontains=genre) if genre else Song.objects.none()
-    return render(request, 'music/song_search.html', {'songs': songs, 'genre': genre})
+    term = request.GET.get('genre', '').strip()
+    results = []
 
+    if term:
+        # Завантажуємо всі пісні із заповненим жанром
+        qs = Song.objects.filter(genre__isnull=False).select_related('genre')
+        low = term.lower()
+
+        # Фільтруємо в Python — ігноруємо регістр навіть для кирилиці
+        for song in qs:
+            if low in song.genre.name.lower():
+                results.append(song)
+
+    # Передаємо список жанрів для автокомпліту (якщо треба)
+    genres = Genre.objects.order_by('name').values_list('name', flat=True)
+
+    return render(request, 'music/song_search.html', {
+        'songs': results,
+        'genre': term,
+        'genres': genres,
+    })
 def song_detail_view(request, song_id):
     song = get_object_or_404(Song, pk=song_id)
     return render(request, 'music/song_detail.html', {'song': song})

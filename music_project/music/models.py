@@ -1,10 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class Genre(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return self.name
+
 class Song(models.Model):
     title       = models.CharField(max_length=200)
     artist      = models.CharField(max_length=200)
-    genre       = models.CharField(max_length=100)
+    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, blank=True)
     style       = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
     audio_file  = models.FileField(upload_to='songs/', blank=True)

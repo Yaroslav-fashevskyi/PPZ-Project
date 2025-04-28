@@ -8,3 +8,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# ігноруємо всі треки
+/media/songs/*
+# але зберігаємо пустий індекс-файл, щоб директорія була в репо
+!media/songs/.gitkeep

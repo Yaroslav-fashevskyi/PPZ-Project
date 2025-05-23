@@ -12,7 +12,7 @@ class Song(models.Model):
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, blank=True)
     style       = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
-    audio_file  = models.FileField(upload_to='songs/', blank=True)
+    audio_file  = models.FileField(upload_to='songs/')
     cover_image = models.ImageField(upload_to='covers/', blank=True, null=True)
 
     def __str__(self):
